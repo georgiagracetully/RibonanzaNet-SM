@@ -12,23 +12,26 @@ This repository contains code, data, and notebooks for fine-tuning [RibonanzaNet
 
 
 ├── data/             # Raw and processed data files
-│   ├── PK50.fasta
-│   ├── clustered\_sequences.fasta
-│   ├── train\_set.pkl
-│   ├── val\_set.pkl
-│   └── test\_set.pkl
+│   ├── fasta_files/
+│   ├── _train/
+│   ├── _val/
+│   └── analysis_ribonanzanet_sm_data_split.py
 │
 ├── train/            # PyTorch fine-tuning scripts
-│   └── train\_finetune.py
+│   └── SM_train_model_sim.py
+│   └── SM_train_model_on_rdiff_and_nodr_abs.py
 │
 ├── DEMO/             # SLURM job scripts for HPC training
-│   └── train\_job.sbatch
+│   └── sm_train_all_reac_diff_with_NoDr_abs.sbatch.sh
+│   └── sm_train_all_reac_diff_simultaneously.sbatch.sh
+│   └── sm_train_all_models.sbatch.sh
 │
 ├── ANALYSIS/         # Jupyter notebooks for result visualization
-│   └── heatmap\_visualization.ipynb
+│   ├── heatmaps
 │
 ├── configs/          # Model configuration files
-│   └── pk50\_config.yaml
+│   └── pairwise.yaml
+│   ├── rnet_sm_configs
 │
 ├── requirements.txt  # Required packages
 └── README.md
