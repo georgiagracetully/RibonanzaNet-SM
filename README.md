@@ -1,4 +1,4 @@
-# RibonanzaNet_SM
+# RibonanzaNet-SM
 
 Fine-tuning RibonanzaNet on small RNA datasets for chemical reactivity profile prediction.
 
@@ -51,9 +51,10 @@ Train/test/validation splits are precomputed and stored in the `data/` directory
    ```
 
 2. **Train model**:
-
+   Arguments vary depending on training script, but here is one example: 
    ```bash
-   python train/train_finetune.py --config configs/pk50_config.yaml
+   python SM_train_model_on_rdiff_and_nodr_abs.py --data '/data/rdiff_with_NoDr_abs_train.json' --val_data '/data/rdiff_with_NoDr_abs_val.json' --test_data '/data/rdiff_with_NoDr_abs_test.json' --criterion 'mae' --epochs 40 --save_path 'RibonanzaNet-SM_005.pt' --train_snr_cutoff 1 --val_snr_cutoff 1
+
    ```
 
 3. **Run evaluation / analysis**:
