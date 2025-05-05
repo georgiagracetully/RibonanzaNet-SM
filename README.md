@@ -10,7 +10,7 @@ This repository contains code, data, and notebooks for fine-tuning [RibonanzaNet
 
 ```
 
-.
+
 ├── data/             # Raw and processed data files
 │   ├── PK50.fasta
 │   ├── clustered\_sequences.fasta
