@@ -64,7 +64,7 @@ Train/test/validation splits are precomputed and stored in the `data/` directory
    Open the notebooks in the `ANALYSIS/` directory using JupyterLab:
 
    ```bash
-   jupyter lab
+   python -m notebook
    ```
 
 ## Citation
