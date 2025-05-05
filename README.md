@@ -48,7 +48,7 @@ Train/test/validation splits are precomputed and stored in the `data/` directory
 1. **Install requirements**:
    ```bash
    pip install -r requirements.txt
-````
+   ```
 
 2. **Train model**:
 
