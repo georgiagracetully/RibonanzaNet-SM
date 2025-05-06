@@ -1,6 +1,6 @@
 # RibonanzaNet-SM
 
-Fine-tuning RibonanzaNet on small RNA datasets for chemical reactivity profile prediction.
+Fine-tuning RibonanzaNet on small RNA datasets for chemical reactivity profile prediction. Details on theory behind the project can be found [here](https://georgiagracetully.github.io/portfolio/project-5/)
 
 ## Overview
 
