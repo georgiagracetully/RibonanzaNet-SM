@@ -1,45 +1,126 @@
 ---
-title: "Fall Project 2: Das Lab"
-excerpt: "Fine-tuning RibonanzaNet to Predict Ligand Binding Affinity"
+title: "Fall Project 1: Das Lab"
+excerpt: "Fine-tuning RibonanzaNet to Predict RNA/small-molecule interactions"
 collection: portfolio
 ---
+Previously, it has been demonstrated that probing RNA with chemical modification reagents, also known as chemical mapping or chemical footprinting, can be used to identify ligand-binding regions on RNAs comparing site-specific reactivity changes of nucleotides incubated with small molecules. [1,2] My plan was to apply this proof-of-concept result with the Das Lab's high-throughput chemical mapping protocol to generate a dataset of millions to billions of RNA-ligand interactions to develop a deep learning model that predicts sequence-specific binding of small molecules. 
 
-One of the most sought after applications necessary for *de novo* design of riboswitches is to accurately predict riboswitch binding affinities to their ligands. Before the revolution of transformer-based LLMs for macromolecule structure prediction, EternaBench was created as a diverse riboswitch benchmark dataset for training and evaluation of physics-based and probabilistic ML models, including EternaFold. The designed riboswitches in this experimental dataset each included two aptamers: the first an aptamer for an input ligand and the second for an output reporter fluorescently tagged MS2 viral coat protein. These riboswitches were designed so that upon binding of the input ligand (flavin mononucleotide (FMN), theophylline, or tryptophan), the MS2 protein aptamer is more accessible, thereby increasing binding affinity of fluorescent protein. Measurements were performed on this diverse dataset for MS2 protein binding affinities with and without ligand present (K+lig and K-lig).  
+After demonstrating that the trained model could accurately predict both binding affinity and binding location using RNA and small molecule features, my initial goal was to fine-tune it to identify small molecule binders for pathogenic RNA targets—aiming to disrupt their structure and, consequently, their function. However, my interest gradually shifted toward designing RNA aptamers for diagnostic applications or for complex biological computation. My plan was then to expand the model by incorporating a reinforcement learning framework to generate designs for high-affinity aptamers for any given small molecule input.
 
-[Previously](https://georgiagracetully.github.io/portfolio/project-4/), I indirectly evaluated the potential for selected probabilistic, thermodynamic, and deep learning models at predicting ligand-binding affinity through a zero-shot approach by extracting the probability of the terminal base pair in the hairpin of the MS2 protein aptamer. 
+While I unfortunately had to forfeit this project, I did receive some preliminary results that showed that an RNA foundation model can be fine-tuned to predict small molecule binding events. 
 
-However, I furthermore wanted to fine-tune RibonanzaNet to predict ligand-binding affinity, and then evaluate predictions against models of which a constrained partition function calculation was used to predict ligand binding affinities. All riboswitches have 1 of three ligand-binding aptamers with theoretically the same binding affinity. However, the prediction task for models is to predict the binding affinity of the MS2 protein aptamer to the MS2 protein, both with and without ligand present. Here is a table of the binding affinities for each ligand : 
+A pilot experiment was performed July 2024 performing the SHAPE chemical mapping protocol on a library of 3000 RNAs designed to have pseudoknot motifs incubated with small molecules known to bind RNA - Argininamide, Erythromycin, Kanamycin, Mitoxantrone, Paromomycin, Spectinomycin, and Tetracycline. 
 
+I fine-tuned multiple models of RibonanzaNet, adjusting hyperparameters and model architecture. At first, I tried to fine-tune RibonanzaNet alongside an embedding generator block so that the model could generalize beyond the initial 7 small molecules in the training data. But, the training time was taking too long (around 2 hours/epoch) for a pilot experiment with the primary goal being to test whether RibonanzaNet already contains the information necessary within RNA sequence and/or pairwise embeddings to predict interactions with small molecules (given just a small initial amount of data for training). 
 
-| Ligand       | Aptamer sequence         | Aptamer constraint            | Concentration  | K<sub>d</sub> (μM)|
-|--------------|--------------------------|-------------------------------|----------------|-------------------|
-| FMN          | nAGGAUAU&AGAAGGn         | (xxxxxx(&)xxxxx)              | 200 μM         | 2.2               |
-| Tryptophan   | AGGACCGG&CCGCCACU        | ((xxx(((&)))xxx))             | 2.4 mM         | 1.3               |
-| Theophylline | GAUACCAG&CCCUUGGCAGC     | (xxx((((&)xxx)))xxx)          | 2.0 mM         | 20                |
+The base RibonanzaNet model was trained on data from two sepearate chemical probing techniques: SHAPE (Selective Acylation of the 2' Hydroxyl as Analyzed by Primer Extension) probing with the electrophilic reagent 2-aminopyridine-3-carboxylic acid imidazolide (2A3) [3] as well as DMS chemical footprinting [4]. My initial experiment was simple: adjust the final decoder layer of RibonanzaNet to instead predict 2-8 reactivity profiles, with each reactivity profile being a new small molecule condition. I would first assess model performance through quick visual checks on heat maps of experimental and predicted reactivity profiles under each condition. If the predictions looked promising, I would then generate a more robust quantitative analysis to benchmark model predictions. 
 
+## The Experiment 
 
+Experimental Null Hypothesis: RibonanzaNet cannot be fine-tuned on 1k new labeled examples of RNA/small-molecule chemical reactivity profiles to make accurate predictions on the test data. 
 
-This table is adapted from Supplementary Table 14 from the [paper](https://www.nature.com/articles/s41592-022-01605-0#Sec36) **RNA secondary structure packages evaluated and improved by high-throughput experiments** . 
+Possible explanations of Null Hypothesis: 
 
-My first attempt at fine-tuning involved manipulating how the model processed the *sequence features*. The most simple example inlcuded just passing the mean of the sequence feature into a linear layer with an output of 2 (for both the log of the riboswitch KD with and without ligand bound). However, my attempts at processing the sequence features did not work, and predictions on the test set were essentially the same for each sequence. This makes sense because averaging the sequence embeddings effectively collapses all positional and relational information. Since the global RNA structure is the key component to predicting ligand binding and recognition, during fine-tuning the model was unable to learn anything meaningful. 
+1) The experimental data itself is pure noise. There is no predictable pattern that even a million-parameter LLM can learn.   
+2) The model needs more diverse training data to learn.   
+3) The model needs more parameters or a more sophisticated architecture tailored to the new task in order to learn RNA-small molecule reactivity profiles .   
 
-My second attempt at fine-tuning involved manipulating the *pairwise features* . My inital simple manipulation techinques did not work (including just averaging the flattened pairwise features before passing through a linear layer). This makes sense for the same reason averaging the sequence embeddings directly did not work. However, when I averaged each structural channel of the pairwise features, annd then averaged the pooled channels before passing it through a linear layer, I allowed the model to pick up on the relationship between ligand binding and RNA secondary/tertiary structure. 
+## Selected Results - Qualitative 
 
-I actually fine-tuned RibonanzaNet on this data (which I called the fine-tuned model "RibonanzaNet-EB" ) within a Jupyter NB with a gpu backend through a slurm supercomputer. You can see the Jupyter NB [Here](https://github.com/georgiagracetully/georgiagracetully.github.io/blob/master/notebooks/eb_data/RibonanzaNet_EB_RS_tuning.ipynb). You can download the training data from the archived [EB repository](https://github.com/eternagame/EternaBench/) and [RibonanzaNet](https://github.com/Shujun-He/RibonanzaNet). You can also use another RNA-LLM . 
+The best results qualitatively from this pilot experiment came from RibonanzaNet-SM 005. This model was trained with a final decoder layer of 8 reactivity profiles, the first seven being *reactivity differences* between the small molecule condition and a no small molecule baseline (I called this baseline "NoDr" for "No Drug", since all of these molecules are drugs). The last vector was the absolute reactivity profile without small molecule incubation. The idea is that since I used MSE or MCRSE as the loss function during training, adding in the absolute reactivity vector would normalize the gradient so that the model would not overfit to the data with the largest magnitude of reactivity differences. However, as you will see with my quantitative results, this still became a problem as there was a direct correlation in magnitude of reactivity differences with the PCC of predictions under each drug condition. But again, this was just a preliminary experiment to evaluate whether RibonanzaNet contained information necessary within the pretrained model to make predictions under new conditions. Ideally, since this model is relatively sparse and easy to train, it would be used my experimentalists with small datasets for fine-tuning to predict RNA behavior under other conditions. Alternatively, we would collect enough new RNA reactivity profiles with different small molecules so that, combined with an LLM 
 
-Now using the same training /test split as EternaFold, here are some results : 
+Here are some selected quantitative results , however, you can play around with generating heatmaps of all RNAs in the test dataset under each condition by copying this [repository](https://github.com/georgiagracetully/georgiagracetully.github.io/tree/master/notebooks/sm_data) and running cells in this [notebook](https://github.com/georgiagracetully/georgiagracetully.github.io/blob/master/notebooks/sm_data/Selected_RibonanzaNet_SM_Qualitative_Heat_Maps.ipynb)
 
-Comparing PCC with EternaFold : 
+An example of different experimental and predicted reactivity *differences* on a sequence from the test set from RibonanzaNet 005 : 
+
+### Sequence 13
+<br/><img src='/images/normalized_005_sequence_13.png'>
+
+### Sequence 2 
+<br/><img src='/images/normalized_005_sequence_2.png'>
+
+A look at individual reactivity profiles (not normalized) for three conditions for sequence 2: 
 
 <div style="display: flex; justify-content: center; gap: 20px;">
-  <img src="/images/Just_eternafold_and_rneteb_Kd-lig_Ribologic_FMN.png">
+  <img src="/images/mito_005_sequence_2.png" style="width: 30%;">
+  <img src="/images/kana_005_sequence_2.png" style="width: 30%;">
+  <img src="/images/tetr_005_sequence_2.png" style="width: 30%;">
 </div>
-  
-
-Because many if not most riboswitches in the EternaBench dataset did not have significant differences in MS2 binding affinity with and without ligand bound, to test whether the model can predict RNA structure with ligand bound I also fine-tuned RibonanzaNet on the activation ratio, and evaluated results : 
 
 <div style="display: flex; justify-content: center; gap: 20px;">
-  <img src="/images/Just_eternafold_and_rneteb_log_AR.png">
+  <img src="/images/spec_005_sequence_2.png" style="width: 30%;">
+  <img src="/images/eryt_005_sequence_2.png" style="width: 30%;">
+  <img src="/images/paro_005_sequence_2.png" style="width: 30%;">
 </div>
-  
-RibonanzaNet is not able to predict RNA binding affinity, given a shift in ensemble due to ligand binding. However, combined with a pretrained model on reactivity data with ligand bound (see [here](https://georgiagracetully.github.io/portfolio/project-5/)), I am hopeful that this would be possible. 
+
+<div style="display: flex; justify-content: center; gap: 20px;">
+  <img src="/images/argi_005_sequence_2.png" style="width: 30%;">
+</div>
+
+From these profiles, you can see that the model may not be as good at predicting large reactivity differences for conditions with a lower frequency of significant reactivity differences. 
+
+Here, I am showing how adding in the raw reactivity vector during training helps the model pick up on differences between conditions with less binding events (such as Erythromycin ): 
+
+On the left, is reactivity difference heatmap for sequences 50-100 without the raw reactivity vector during training, and on the right is with the raw reactivity vector included. You can see that there are a few sequences with what appears to be significant reactivity differences learned by the right model. 
+
+### RibonanzaNet-004 No absolute reactivity vector included during training
+
+<div style="display: flex; justify-content: center; gap: 20px;">
+  <img src="/images/eryt_qual_004.png">
+</div>
+
+### RibonanzaNet-005 Includes all reactivity differences, and the absolute reactivity vector 
+
+<div style="display: flex; justify-content: center; gap: 20px;">
+  <img src="/images/eryt_qual_005.png">
+</div>
+
+There is still much need for improvment in terms of accuracy, however this is a good start for guiding future fine-tuning projects. 
+
+## Selected Results - Quantitative 
+
+The first quantitative metric that was also used to evaluate improvement during training is computing a pearson correlation coefficient between the experimental reactivity vectors and predictions. For RibonanzaNet-SM 005, here are the computed PCCs per each condition: 
+
+
+Average PCC per condition:
+
+Argi    0.151971  
+Eryt    0.200652  
+Kana    0.278094  
+Mito    0.746358  
+Paro    0.555189  
+Spec    0.127898  
+Tetr    0.611173  
+
+Another quantitative metric I used was to flag nucleotides that are in top 80% of reactivity difference, compute a sliding window sum of flagged nucleotides, and then compute a PCC of predictions with experimental flagged nucleotides. 
+
+Average PCC per condition:
+
+Argi    0.164781  
+Eryt    0.197671  
+Kana    0.221571  
+Mito    0.651125  
+Paro    0.436432  
+Spec    0.170088  
+Tetr    0.552999  
+
+
+<div style="display: flex; justify-content: center; gap: 20px;">
+  <img src="/images/quant_analysis.png">
+</div>
+
+You can clone this [repo](https://github.com/georgiagracetully/georgiagracetully.github.io/tree/master/notebooks/sm_data) and then run the [jupyter NB](https://github.com/georgiagracetully/georgiagracetully.github.io/blob/master/notebooks/sm_data/Selected_Plots_RibonanzaNet_SM_Quantitative_Data_Analysis.ipynb) within this repo to try evaluating predictions by changing the threshold required for a nucleotide to be "flagged". 
+
+
+References  
+
+(1)	Martin, S.; Blankenship, C.; Rausch, J. W.; Sztuba-Solinska, J. Using SHAPE-MaP to Probe Small Molecule-RNA Interactions. Methods 2019, 167, 105–116. https://doi.org/10.1016/j.ymeth.2019.04.009.  
+(2)	Zeller, M. J.; Favorov, O.; Li, K.; Nuthanakanti, A.; Hussein, D.; Michaud, A.; Lafontaine, D. A.; Busan, S.; Serganov, A.; Aubé, J.; Weeks, K. M. SHAPE-Enabled Fragment-Based Ligand Discovery for RNA. Proc. Natl. Acad. Sci. U. S. A. 2022, 119 (20), e2122660119. https://doi.org/10.1073/pnas.2122660119.  
+(3)	Wilkinson, K. A.; Merino, E. J.; Weeks, K. M. Selective 2’-Hydroxyl Acylation Analyzed by Primer Extension (SHAPE): Quantitative RNA Structure Analysis at Single Nucleotide Resolution. Nat. Protoc. 2006, 1 (3), 1610–1616. https://doi.org/10.1038/nprot.2006.249.  
+(4)	Tijerina, P.; Mohr, S.; Russell, R. DMS Footprinting of Structured RNAs and RNA-Protein Complexes. Nat. Protoc. 2007, 2 (10), 2608–2623. https://doi.org/10.1038/nprot.2007.380.  
+
+
+
+
+
+
