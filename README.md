@@ -4,7 +4,7 @@ Fine-tuning RibonanzaNet on small RNA datasets for chemical reactivity profile p
 
 ## Overview
 
-This repository contains code, data, and notebooks for fine-tuning [RibonanzaNet](https://github.com/Shujun-He/RibonanzaNet) — a large RNA foundation model — to predict structural reactivity changes in RNA sequences upon binding with small molecules. This model can be applied to new libraries and used to generate informative reactivity features for downstream RNA analysis.
+This repository contains code, data, and notebooks for I used for fine-tuning [RibonanzaNet](https://github.com/Shujun-He/RibonanzaNet) — a large RNA foundation model — to predict structural reactivity changes in RNA sequences upon binding with small molecules (specific names of small molecules are hard-coded into the training script). 
 
 ## Project Structure
 
@@ -69,11 +69,11 @@ Train/test/validation splits are precomputed and stored in the `data/` directory
 
 ## Citation
 
-If you use this repository or model in your work, please cite the original [RibonanzaNet paper](https://www.biorxiv.org/content/10.1101/2024.02.24.581671v1).
+If modifying these training scripts, cite the original [RibonanzaNet paper](https://www.biorxiv.org/content/10.1101/2024.02.24.581671v1).
 
 ---
 
-For questions or contributions, feel free to open an issue or submit a pull request.
+
 
 
 
